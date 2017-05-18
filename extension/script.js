@@ -1,27 +1,48 @@
+var currentTimeout = null;
+
 $('document').ready(function(){
     $("#seach_form").on('keyup keypress', function(e) {
         var keyCode = e.keyCode || e.which;
 
+        if (currentTimeout != null) {
+            clearTimeout(currentTimeout);
+            currentTimeout = null;
+        }
+
         if (keyCode === 13) { 
-            var searchBox = $('#search');
-            search(searchBox.val());
+            performSearch();
             e.preventDefault();
             return false;
+        } else {
+            currentTimeout = setTimeout(performSearch, 400);
         }
     });
 
     $('#popcorn-bowl').click(function() {
-        var searchBox = $('#search');
-        searchBox.val('popcorn');
-        search(searchBox.val());
+        $('#search').val('popcorn');
+        performSearch();
     });
 
-    $('#intro').show();
-    $('#loader-container').hide();
-    $('#container').hide();
+    intro();
 
     $("#search").focus();
 });
+
+var intro = function() {
+    $('#intro').show();
+    $('#loader-container').hide();
+    $('#container').hide();
+}
+
+var performSearch = function() {
+    var term = $('#search').val();
+
+    if (term.length > 0) {
+        search(term);
+    } else {
+        intro();
+    }
+}
 
 var search = function(query) {
 	query = query.trim();
