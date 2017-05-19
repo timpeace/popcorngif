@@ -1,5 +1,28 @@
 PopcornGif = {};
+PopcornGif.setupDialog = function() {
+  $('body').append(`
+    <div id="modal1" class="modal">
+      <div class="modal-content">
+        <h4>Modal Header</h4>
+        <p>A bunch of text</p>
+      </div>
+      <div class="modal-footer">
+        <a href="#!" class="modal-action modal-close waves-effect waves-green btn-flat">Agree</a>
+      </div>
+    </div>
+  `);
+
+  $('.modal').modal();
+}
+
 PopcornGif.setup = function(r) {
+  State = {
+    Intro : 0,
+    Loading : 1,
+    Results : 2,
+  }
+
+  var TENOR_API_KEY = 'Y7QV3LZRDJTL';
   var currentTimeout = null;
 
   $('document').ready(function() {
@@ -30,15 +53,9 @@ PopcornGif.setup = function(r) {
       performSearch();
     });
 
-    intro();
+    setState(State.Intro);
 
     r.find("#search").focus();
-  }
-
-  var intro = function() {
-    r.find('#intro').show();
-    r.find('#loader-container').hide();
-    r.find('#container').hide();
   }
 
   var performSearch = function() {
@@ -47,7 +64,7 @@ PopcornGif.setup = function(r) {
     if (term.length > 0) {
       search(term);
     } else {
-      intro();
+      setState(State.Intro);
     }
   }
 
@@ -56,33 +73,25 @@ PopcornGif.setup = function(r) {
 
     clearGifs();
 
-    setLoadingVisibility(true);
+    setState(State.Loading);
 
     $.ajax({
-      url: `https://api.tenor.co/v1/search?tag=${query}&key=LIVDSRZULELA`,
+      url: `https://api.tenor.co/v1/search?tag=${query}&limit=50&key=${TENOR_API_KEY}`,
         success: function( result ) {
-          setLoadingVisibility(false);
+          setState(State.Results);
           setGifs(query, result.results);
         },
         failure: function (error) {
-          setLoadingVisibility(false);
-          // TODO add error state
+          // TODO show error, maybe new state completely
+          setState(State.Results);
         },
     });
   };
 
-  var setLoadingVisibility = function(visible) {
-    var loader = r.find('#loader-container');
-    var container = r.find('#container');
-    r.find('#intro').hide();
-
-    if (visible) {
-      loader.show();
-      container.hide();
-    } else {
-      loader.hide();
-      container.show();
-    }
+  var setState = function(state) {
+    r.find('#intro').toggle(state == State.Intro);
+    r.find('#loader').toggle(state == State.Loading);
+    r.find('#gifs-container').toggle(state == State.Results);
   }
 
   var clearGifs = function() {
@@ -126,13 +135,26 @@ PopcornGif.setup = function(r) {
       </div>
       `);
 
-    div.find('.save_btn').click(function() { downloadUri('data:image/gif,' + gifUrl, searchTerm); });
-    div.find('.copy_btn').click(function() { copyToClipboard(gifUrl); });
-    div.find('.copy_github_btn').click(function() { copyToClipboard(githubMarkdown); });
+    div.find('.save_btn').click(function() {
+      downloadUri('data:image/gif,' + gifUrl, searchTerm);
+      registerShare(result.id);
+    });
+    div.find('.copy_btn').click(function() {
+      copyToClipboard(gifUrl);
+      registerShare(result.id);
+    });
+    div.find('.copy_github_btn').click(function() {
+      copyToClipboard(githubMarkdown);
+      registerShare(result.id);
+    });
 
     // TODO set the gif height accurately so the placeholder doesn't change size
 
     return div[0];
+  }
+
+  var registerShare = function(id) {
+    $.ajax({url: `https://api.tenor.co/v1/registershare?id=${id}&key=${TENOR_API_KEY}`}); 
   }
 
   var copyToClipboard = function(text) {
