@@ -20,6 +20,7 @@ PopcornGif.setup = function(r) {
     Intro : 0,
     Loading : 1,
     Results : 2,
+    Empty : 3,
   }
 
   var TENOR_API_KEY = 'Y7QV3LZRDJTL';
@@ -76,7 +77,7 @@ PopcornGif.setup = function(r) {
     setState(State.Loading);
 
     $.ajax({
-      url: `https://api.tenor.co/v1/search?tag=${query}&limit=50&key=${TENOR_API_KEY}`,
+      url: `https://api.tenor.co/v1/search?tag=${escapeTerm(query)}&limit=50&key=${TENOR_API_KEY}`,
         success: function( result ) {
           setState(State.Results);
           setGifs(query, result.results);
@@ -88,10 +89,15 @@ PopcornGif.setup = function(r) {
     });
   };
 
+  var escapeTerm = function(term) {
+    return term.split(' ').map(encodeURIComponent).join('+');
+  }
+
   var setState = function(state) {
     r.find('#intro').toggle(state == State.Intro);
     r.find('#loader').toggle(state == State.Loading);
     r.find('#gifs-container').toggle(state == State.Results);
+    r.find('#gifs-empty').toggle(state == State.Empty);
   }
 
   var clearGifs = function() {
@@ -99,6 +105,11 @@ PopcornGif.setup = function(r) {
   }
 
   var setGifs = function(searchTerm, results) {
+    if (results.length == 0) {
+      setState(State.Empty);
+      return;
+    }
+
     var columns = r.find('.gif_column');
 
     // TODO append based on height instead of round robin
