@@ -11,5 +11,8 @@
   "browser_action": {
     "default_title": "Popcorn GIF Search",
     "default_popup": "popup.html"
-  }
+  },
+  "permissions": [
+    "downloads"
+  ]
 }

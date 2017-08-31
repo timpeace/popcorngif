@@ -147,7 +147,7 @@ PopcornGif.setup = function(r) {
       `);
 
     div.find('.save_btn').click(function() {
-      downloadUri('data:image/gif,' + gifUrl, searchTerm);
+      downloadFile(gifUrl, searchTerm + ".gif");
       registerShare(result.id);
     });
     div.find('.copy_btn').click(function() {
@@ -178,13 +178,10 @@ PopcornGif.setup = function(r) {
     Materialize.toast('Copied!', 2000);
   }
 
-  var downloadUri = function(uri, name) {
-    var link = document.createElement("a");
-    link.download = name;
-    link.href = uri;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    delete link;
+  var downloadFile = function(url, filename) {
+    chrome.downloads.download({
+      url: url,
+      filename: filename
+    });
   }
 };
